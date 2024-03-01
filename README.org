@@ -1,0 +1,23 @@
+Doctests for Lisp
+
+Clone repository
+#+begin_src bash
+git clone git@github.com:simendsjo/sijo-doctest.git ~/quicklisp/local-projects/sijo-doctest
+#+end_src
+
+Load library
+#+begin_src lisp
+(ql:quickload :sijo-doctest)
+#+end_src
+
+Test your package
+#+begin_src lisp
+(sijo-doctest:test-package :your-own-package)
+#+end_src
+
+This fork has some minor differences to the upstream version:
+- Tweaked to evaluate expected results to avoid problems with fset and readtables; #{||} cannot be used, and (fset:empty-map) neither
+- Improved working with multiple values
+- Added a test-package function to test all functions in a package
+- Only print when tests are failing (useful when testing entire packages)
+- RUN-DOCTESTS doesn't throw on empty docstring (triggered eof error)
