@@ -116,7 +116,7 @@
 
     (values tests-failed tests-passed)))
 
-#+(or)
+#+(and)
 (defun test (thing &key (output t))
   "Test extracts and tests code snippets embedded in the documentation string
    of <thing>. It returns the number of tests failed and passed and prints a

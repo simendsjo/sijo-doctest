@@ -10,14 +10,44 @@ Load library
 (ql:quickload :sijo-doctest)
 #+end_src
 
+Write some doctests
+#+begin_src lisp
+(defun square (x)
+  "Squares
+
+>> (square 0)
+0
+>> (square 1)
+1
+>> (square 2)
+4"
+  (* x x))
+#+end_src
+
+See [[file:doctest.lisp::defun test (thing &key (output t)][doctest.lisp::test]] for full documentation or look at the documentation for
+the function directly
+#+begin_src lisp :wrap quote :exports both
+(documentation 'sijo-doctest::test 'function)
+#+end_src
+
+#+RESULTS:
+#+begin_quote
+Test extracts and tests code snippets embedded in the documentation string
+   of <thing>. It returns the number of tests failed and passed and prints a
+   description to <output>.
+
+   In order to have...[sly-elided string of length 3067]
+#+end_quote
+
 Test your package
 #+begin_src lisp
 (sijo-doctest:test-package :your-own-package)
 #+end_src
 
 This fork has some minor differences to the upstream version:
-- Tweaked to evaluate expected results to avoid problems with fset and readtables; #{||} cannot be used, and (fset:empty-map) neither
+- Tweaked to evaluate expected results to avoid problems with ~fset~ and
+  readtables; ~#{||}~ cannot be used, and ~(fset:empty-map)~ neither
 - Improved working with multiple values
-- Added a test-package function to test all functions in a package
-- Only print when tests are failing (useful when testing entire packages)
-- RUN-DOCTESTS doesn't throw on empty docstring (triggered eof error)
+- Added a ~test-package~ function to test all functions in a package
+- Print only when tests are failing (useful when testing entire packages)
+- ~run-doctests~ doesn't throw on empty docstring (triggered eof error)
