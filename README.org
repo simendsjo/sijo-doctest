@@ -16,8 +16,9 @@ Test your package
 #+end_src
 
 This fork has some minor differences to the upstream version:
-- Tweaked to evaluate expected results to avoid problems with fset and readtables; #{||} cannot be used, and (fset:empty-map) neither
+- Tweaked to evaluate expected results to avoid problems with ~fset~ and
+  readtables; ~#{||}~ cannot be used, and ~(fset:empty-map)~ neither
 - Improved working with multiple values
-- Added a test-package function to test all functions in a package
-- Only print when tests are failing (useful when testing entire packages)
-- RUN-DOCTESTS doesn't throw on empty docstring (triggered eof error)
+- Added a ~test-package~ function to test all functions in a package
+- Print only when tests are failing (useful when testing entire packages)
+- ~run-doctests~ doesn't throw on empty docstring (triggered eof error)
