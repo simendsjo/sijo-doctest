@@ -1,0 +1,30 @@
+on: [push]
+jobs:
+  tests:
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          # - macos-latest
+          # - windows-latest
+        lisp:
+          - sbcl-bin
+          # - ecl
+          # - ccl-bin
+          # - abcl-bin
+          # - clasp-bin
+          # - cmu-bin
+          # - clisp-head
+    runs-on: ${{ matrix.os }}
+    env:
+      LISP: ${{ matrix.lisp }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: 40ants/setup-lisp@v4
+        with:
+          asdf-system: sijo-doctest
+          qlfile-template: |
+            dist ultralisp http://dist.ultralisp.org
+      - uses: 40ants/run-tests@v2
+        with:
+          asdf-system: sijo-doctest
