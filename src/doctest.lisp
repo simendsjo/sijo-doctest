@@ -18,6 +18,7 @@
 (defpackage :sijo-doctest
   (:use #:cl)
   (:export #:test
+           #:test-docstring
            #:test-function
            #:test-macro
            #:test-file
@@ -222,7 +223,11 @@
        Results for SQR (FUNCTION): 1 of 4 failed.|
    (values 1 3)"
 
-  (cond ((functionp thing)
+  (cond ((null thing)
+         (values 0 0))
+        ((stringp thing)
+         (test-docstring thing :output output))
+        ((functionp thing)
          (test-function thing :output output))
         ((pathnamep thing)
          (test-file thing :output output))
@@ -234,6 +239,10 @@
         (t
          (error "~&No suitable testing-function available for ~A~%" thing))))
 
+(defun test-docstring (documentation &key (output t))
+  (with-input-from-string (docstring documentation)
+    (run-doctests docstring output)))
+
 (defun test-function (function &key (output t))
   "Test-function extracts and tests code snippets in <function>'s documentation
    string. It returns the number of tests failed and passed and prints a
@@ -244,8 +253,7 @@
   (if (documentation function 'function)
       (let ((function-name (third (multiple-value-list (function-lambda-expression function)))))
         (multiple-value-bind (tests-failed tests-passed)
-            (with-input-from-string (docstring (documentation function 'function))
-              (run-doctests docstring output))
+            (test-docstring (documentation function 'function) :output output)
           (print-results function-name 'function output tests-failed tests-passed)))
       (values 0 0)))
 
@@ -259,8 +267,7 @@
   (if (documentation macro 'function)
       (let ((macro-name (third (multiple-value-list (function-lambda-expression (macro-function macro))))))
         (multiple-value-bind (tests-failed tests-passed)
-            (with-input-from-string (docstring (documentation macro 'function))
-              (run-doctests docstring output))
+            (test-docstring (documentation macro 'function) :output output)
           (print-results macro-name 'macro output tests-failed tests-passed)))
       (values 0 0)))
 
@@ -274,7 +281,7 @@
 
   (multiple-value-bind (tests-failed tests-passed)
       (with-open-file (docstring filename :direction :input)
-        (run-doctests docstring output))
+        (test-docstrting docstring :output output))
     (print-results filename 'file output tests-failed tests-passed)))
 
 (defun test-package (package &key (output t))
