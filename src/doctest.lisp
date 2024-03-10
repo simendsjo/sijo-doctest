@@ -17,7 +17,8 @@
 
 (defpackage :sijo-doctest
   (:use #:cl)
-  (:export #:test-function
+  (:export #:test
+           #:test-function
            #:test-macro
            #:test-file
            #:test-package))
@@ -116,7 +117,6 @@
 
     (values tests-failed tests-passed)))
 
-#+(and)
 (defun test (thing &key (output t))
   "Test extracts and tests code snippets embedded in the documentation string
    of <thing>. It returns the number of tests failed and passed and prints a
