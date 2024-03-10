@@ -168,3 +168,5 @@ This fork has some minor differences to the upstream version:
 - Added a ~test-package~ function to test all functions in a package
 - Print only when tests are failing (useful when testing entire packages)
 - ~run-doctests~ doesn't throw on empty docstring (triggered eof error)
+- Don't require an exact error, but rather a subclass of the expected error,
+  e.g. expecting ~type-error~ will allow a subclass like ~simple-type-error~.
