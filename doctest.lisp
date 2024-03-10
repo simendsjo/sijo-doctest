@@ -277,7 +277,8 @@
 (defun test-package (package)
   (let ((*package* (find-package package)))
     (do-symbols (symbol (find-package package))
-      (when (fboundp symbol)
+      (when (and (eq *package* (symbol-package symbol))
+                 (fboundp symbol))
         (test-function (symbol-function symbol))))))
 
 (defun print-results (test-name test-type output tests-failed tests-passed)
