@@ -229,7 +229,8 @@
         ((and (symbolp thing)
               (macro-function thing))
          (test-macro thing :output output))
-
+        ((packagep thing)
+         (test-package thing :output output))
         (t
          (error "~&No suitable testing-function available for ~A~%" thing))))
 
@@ -274,12 +275,12 @@
         (run-doctests docstring output))
     (print-results filename 'file output tests-failed tests-passed)))
 
-(defun test-package (package)
+(defun test-package (package &key (output t))
   (let ((*package* (find-package package)))
     (do-symbols (symbol (find-package package))
       (when (and (eq *package* (symbol-package symbol))
                  (fboundp symbol))
-        (test-function (symbol-function symbol))))))
+        (test-function (symbol-function symbol) :output output)))))
 
 (defun print-results (test-name test-type output tests-failed tests-passed)
   (when (> tests-failed 0)
