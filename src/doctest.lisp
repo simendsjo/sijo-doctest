@@ -143,13 +143,13 @@
    2) (values 1 2) instead.
 
    If you test a thing that doesn't have a documentation string, test will
-   return NIL.
+   return (values 0 0).
 
    >> (defun sqr (x)
         (* x x))
    'SQR
    >> (sijo-doctest::test #'sqr)
-   NIL
+   (values 0 0)
 
    If you need to test that a function signals a condition for certain inputs
    you can use the name of the condition as the expected return value.
@@ -241,12 +241,13 @@
 
    See also the documentation string for test."
 
-  (when (documentation function 'function)
-    (let ((function-name (third (multiple-value-list (function-lambda-expression function)))))
-      (multiple-value-bind (tests-failed tests-passed)
-          (with-input-from-string (docstring (documentation function 'function))
-            (run-doctests docstring output))
-        (print-results function-name 'function output tests-failed tests-passed)))))
+  (if (documentation function 'function)
+      (let ((function-name (third (multiple-value-list (function-lambda-expression function)))))
+        (multiple-value-bind (tests-failed tests-passed)
+            (with-input-from-string (docstring (documentation function 'function))
+              (run-doctests docstring output))
+          (print-results function-name 'function output tests-failed tests-passed)))
+      (values 0 0)))
 
 (defun test-macro (macro &key (output t))
   "Test-macro extracts and tests code snippets in <macro>'s documentation string.
@@ -255,12 +256,13 @@
 
    See also the documentation string for test."
 
-  (when (documentation macro 'function)
-    (let ((macro-name (third (multiple-value-list (function-lambda-expression (macro-function macro))))))
-      (multiple-value-bind (tests-failed tests-passed)
-          (with-input-from-string (docstring (documentation macro 'function))
-            (run-doctests docstring output))
-        (print-results macro-name 'macro output tests-failed tests-passed)))))
+  (if (documentation macro 'function)
+      (let ((macro-name (third (multiple-value-list (function-lambda-expression (macro-function macro))))))
+        (multiple-value-bind (tests-failed tests-passed)
+            (with-input-from-string (docstring (documentation macro 'function))
+              (run-doctests docstring output))
+          (print-results macro-name 'macro output tests-failed tests-passed)))
+      (values 0 0)))
 
 
 (defun test-file (filename &key (output t))
@@ -276,11 +278,15 @@
     (print-results filename 'file output tests-failed tests-passed)))
 
 (defun test-package (package &key (output t))
-  (let ((*package* (find-package package)))
-    (do-symbols (symbol (find-package package))
-      (when (and (eq *package* (symbol-package symbol))
-                 (fboundp symbol))
-        (test-function (symbol-function symbol) :output output)))))
+  (let ((total-failed 0)
+        (total-passed 0))
+    (let ((*package* (find-package package)))
+      (do-symbols (symbol (find-package package))
+        (when (and (eq *package* (symbol-package symbol))
+                   (fboundp symbol))
+          (multiple-value-bind (tests-failed tests-passed) (test-function (symbol-function symbol) :output output)
+            (incf total-failed tests-failed)
+            (incf total-passed tests-passed)))))))
 
 (defun print-results (test-name test-type output tests-failed tests-passed)
   (when (> tests-failed 0)
