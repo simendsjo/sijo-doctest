@@ -19,6 +19,7 @@
   (:use #:cl)
   (:export #:test
            #:test-docstring
+           #:test-variable
            #:test-function
            #:test-macro
            #:test-file
@@ -228,16 +229,30 @@
          (test-function thing :output output))
         ((pathnamep thing)
          (test-file thing :output output))
-        ((and (symbolp thing)
-              (macro-function thing))
-         (test-macro thing :output output))
         ((packagep thing)
          (test-package thing :output output))
+        ((symbolp thing)
+         (let ((total-failed 0)
+               (total-passed 0))
+           (flet ((collect (fn)
+                    (multiple-value-bind (failed passed) (funcall fn)
+                      (incf total-failed failed)
+                      (incf total-passed passed))))
+             (collect (lambda () (test-variable thing :output output)))
+             (cond
+               ((macro-function thing)
+                (collect (lambda () (test-macro thing :output output))))
+               ((fboundp thing)
+                (collect (lambda () (test-function (symbol-function thing) :output output)))))
+             (values total-failed total-passed))))
         (t
          (error "~&No suitable testing-function available for ~A~%" thing))))
 
+(defun test-variable (thing &key (output t))
+  (test-docstring (documentation thing 'variable) :output output))
+
 (defun test-docstring (documentation &key (output t))
-  (with-input-from-string (docstring documentation)
+  (with-input-from-string (docstring (or documentation ""))
     (run-doctests docstring output)))
 
 (defun extract-function-documentation-and-name (function)
@@ -291,9 +306,8 @@
         (total-passed 0))
     (let ((*package* (find-package package)))
       (do-symbols (symbol (find-package package))
-        (when (and (eq *package* (symbol-package symbol))
-                   (fboundp symbol))
-          (multiple-value-bind (tests-failed tests-passed) (test-function (symbol-function symbol) :output output)
+        (when (eq *package* (symbol-package symbol))
+          (multiple-value-bind (tests-failed tests-passed) (test symbol :output output)
             (incf total-failed tests-failed)
             (incf total-passed tests-passed)))))))
 
