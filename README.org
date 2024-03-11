@@ -14,6 +14,16 @@ Load library
 #+begin_src lisp
 (ql:quickload :sijo-doctest)
 #+end_src
+** Emacs integration
+*** Slime
+Thanks to [[https://emacs.ch/@louis/112020623559150335][@louis@emacs.ch]]:
+#+begin_src elisp
+(defun sijo-test-package ()
+  (interactive)
+  (slime-eval-with-transcript `(sijo-doctest:test-package ,(read (slime-find-buffer-package)))))
+
+(define-key slime-mode-map (kbd "C-c t") 'sijo-test-package)
+#+end_src
 
 ** Usage
 Write some doctests
