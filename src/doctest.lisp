@@ -145,8 +145,11 @@
 
    If you test a thing that doesn't have a documentation string, test will
    return (values 0 0).
+   ECL NOTE: I pass an empty string here as redefining a function in ECL won't
+   remove the old docstring unless a docstring is explicitly passed.
 
    >> (defun sqr (x)
+        \"\"
         (* x x))
    'SQR
    >> (sijo-doctest::test #'sqr)
