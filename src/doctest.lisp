@@ -62,8 +62,8 @@
                T))
          (result T))
     (if test-form-signaled-condition
-        (when (not (subtypep (type-of (car actual-result))
-                             (car expected-result)))
+        (unless (subtypep (type-of (car actual-result))
+                          (car expected-result))
           (unless (subtypep (type-of (car actual-result)) 'warning)
             (setf result 'NIL)
             (format output "~&[~A] ~A signaled a ~A: ~A, expected ~A.~%"
