@@ -1,5 +1,10 @@
-Doctests for Lisp
+[[https://github.com/simendsjo/sijo-doctest/actions/workflows/tests.yaml/badge.svg][Build badge]]
 
+* Doctests for Lisp
+
+See [[file:CHANGELOG.org][CHANGELOG]].
+
+** Installation
 Clone repository
 #+begin_src bash
 git clone git@github.com:simendsjo/sijo-doctest.git ~/quicklisp/local-projects/sijo-doctest
@@ -10,6 +15,7 @@ Load library
 (ql:quickload :sijo-doctest)
 #+end_src
 
+** Usage
 Write some doctests
 #+begin_src lisp
 (defun square (x)
@@ -24,27 +30,12 @@ Write some doctests
   (* x x))
 #+end_src
 
-See [[file:doctest.lisp::defun test (thing &key (output t)][doctest.lisp::test]] for full documentation or look at the documentation for
-the function directly
-#+begin_src lisp :wrap quote :exports both
-(documentation 'sijo-doctest::test 'function)
-#+end_src
-
-#+RESULTS:
-#+begin_quote
-Test extracts and tests code snippets embedded in the documentation string
-   of <thing>. It returns the number of tests failed and passed and prints a
-   description to <output>.
-
-   In order to have...[sly-elided string of length 3067]
-#+end_quote
-
 Test your package
 #+begin_src lisp
 (sijo-doctest:test-package :your-own-package)
 #+end_src
 
-* Documentation for ~sijo-doctest::test~
+** Documentation for ~sijo-doctest::test~
 
 Warning: This is bound to get out of date, so look at the documentation in the source.
 
@@ -80,13 +71,16 @@ Test extracts and tests code snippets embedded in the documentation string
    2) (values 1 2) instead.
 
    If you test a thing that doesn't have a documentation string, test will
-   return NIL.
+   return (values 0 0).
+   ECL NOTE: I pass an empty string here as redefining a function in ECL won't
+   remove the old docstring unless a docstring is explicitly passed.
 
    >> (defun sqr (x)
+        ""
         (* x x))
    'SQR
    >> (sijo-doctest::test #'sqr)
-   NIL
+   (values 0 0)
 
    If you need to test that a function signals a condition for certain inputs
    you can use the name of the condition as the expected return value.
@@ -159,12 +153,3 @@ Test extracts and tests code snippets embedded in the documentation string
        Results for SQR (FUNCTION): 1 of 4 failed.|
    (values 1 3)
 #+end_example
-
-* Changelog
-This fork has some minor differences to the upstream version:
-- Tweaked to evaluate expected results to avoid problems with ~fset~ and
-  readtables; ~#{||}~ cannot be used, and ~(fset:empty-map)~ neither
-- Improved working with multiple values
-- Added a ~test-package~ function to test all functions in a package
-- Print only when tests are failing (useful when testing entire packages)
-- ~run-doctests~ doesn't throw on empty docstring (triggered eof error)

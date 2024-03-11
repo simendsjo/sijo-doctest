@@ -17,7 +17,10 @@
 
 (defpackage :sijo-doctest
   (:use #:cl)
-  (:export #:test-function
+  (:export #:test
+           #:test-docstring
+           #:test-variable
+           #:test-function
            #:test-macro
            #:test-file
            #:test-package))
@@ -26,14 +29,12 @@
 
 (defun whitespace-p (c)
   "Returns T if <c> is a whitespace character, otherwise NIL."
-
-  (or (equal #\Space c)
-      (equal #\Tab c)
-      (equal #\Newline c)))
+  (or (eql #\Space c)
+      (eql #\Tab c)
+      (eql #\Newline c)))
 
 (defun remove-ws (string)
   "Return <string> (as a string) with *all* whitespace characters removed."
-
   (if (stringp string)
       (remove-if #'whitespace-p (copy-seq string))
       (remove-if #'whitespace-p (copy-seq (string string)))))
@@ -42,7 +43,7 @@
   (string-equal (remove-ws string1) (remove-ws string2)))
 
 (defun run-doctest (test-form expected-result expected-output output count)
-  (let* ((test-form-signaled-condition 'NIL)
+  (let* ((test-form-signaled-condition nil)
          (actual-output (make-array '(0) :element-type 'base-char
                                          :fill-pointer 0
                                          :adjustable t))
@@ -59,20 +60,20 @@
          (expected-output-matches-actual-output
            (if expected-output
                (string-equal-ignore-ws actual-output expected-output)
-               T))
-         (result T))
+               t))
+         (result t))
     (if test-form-signaled-condition
-        (when (not (equalp (type-of (car actual-result))
-                           (car expected-result)))
+        (unless (subtypep (type-of (car actual-result))
+                          (car expected-result))
           (unless (subtypep (type-of (car actual-result)) 'warning)
-            (setf result 'NIL)
+            (setf result nil)
             (format output "~&[~A] ~A signaled a ~A: ~A, expected ~A.~%"
                     count test-form
                     (type-of (car actual-result)) (car actual-result)
                     (car expected-result))))
         (unless (and (equalp actual-result expected-result)
                      expected-output-matches-actual-output)
-          (setf result 'NIL)
+          (setf result nil)
           (if expected-output-matches-actual-output
               (format output "~&[~A] ~A returned~{ ~A~}, expected~{ ~A~}.~%"
                       count test-form
@@ -87,7 +88,6 @@
 (defun run-doctests (docstring output)
   "Run-doctests is used by the test functions to perform the actual work.
    It returns the number of tests failed and passed and prints to <output>."
-
   (let ((tests-failed 0)
         (tests-passed 0)
         (count 0))
@@ -100,12 +100,11 @@
                    (whitespace-p (peek-char nil docstring)))
           (let ((test-form (read docstring))
                 (expected-result (list (read docstring)))
-                (expected-output 'NIL))
+                (expected-output nil))
             (when (and (symbolp (car expected-result))
                        (equal (string (car expected-result)) "->"))
               (setf expected-output (read docstring))
               (setf expected-result (list (read docstring))))
-
             (if (run-doctest test-form
                              (car expected-result)
                              expected-output
@@ -113,10 +112,8 @@
                              (incf count))
                 (incf tests-passed)
                 (incf tests-failed))))))
-
     (values tests-failed tests-passed)))
 
-#+(and)
 (defun test (thing &key (output t))
   "Test extracts and tests code snippets embedded in the documentation string
    of <thing>. It returns the number of tests failed and passed and prints a
@@ -143,13 +140,16 @@
    2) (values 1 2) instead.
 
    If you test a thing that doesn't have a documentation string, test will
-   return NIL.
+   return (values 0 0).
+   ECL NOTE: I pass an empty string here as redefining a function in ECL won't
+   remove the old docstring unless a docstring is explicitly passed.
 
    >> (defun sqr (x)
+        \"\"
         (* x x))
    'SQR
    >> (sijo-doctest::test #'sqr)
-   NIL
+   (values 0 0)
 
    If you need to test that a function signals a condition for certain inputs
    you can use the name of the condition as the expected return value.
@@ -221,17 +221,47 @@
    -> |[4] (SQR 2) printed \"2 * 2 = 4\", expected \"Blah blah blah\".
        Results for SQR (FUNCTION): 1 of 4 failed.|
    (values 1 3)"
-
-  (cond ((functionp thing)
+  (cond ((null thing)
+         (values 0 0))
+        ((stringp thing)
+         (test-docstring thing :output output))
+        ((functionp thing)
          (test-function thing :output output))
         ((pathnamep thing)
          (test-file thing :output output))
-        ((and (symbolp thing)
-              (macro-function thing))
-         (test-macro thing :output output))
-
+        ((packagep thing)
+         (test-package thing :output output))
+        ((symbolp thing)
+         (let ((total-failed 0)
+               (total-passed 0))
+           (flet ((collect (fn)
+                    (multiple-value-bind (failed passed) (funcall fn)
+                      (incf total-failed failed)
+                      (incf total-passed passed))))
+             (collect (lambda () (test-variable thing :output output)))
+             (cond
+               ((macro-function thing)
+                (collect (lambda () (test-macro thing :output output))))
+               ((fboundp thing)
+                (collect (lambda () (test-function (symbol-function thing) :output output)))))
+             (values total-failed total-passed))))
         (t
          (error "~&No suitable testing-function available for ~A~%" thing))))
+
+(defun test-variable (thing &key (output t))
+  (test-docstring (documentation thing 'variable) :output output))
+
+(defun test-docstring (documentation &key (output t))
+  (with-input-from-string (docstring (or documentation ""))
+    (run-doctests docstring output)))
+
+(defun extract-function-documentation-and-name (function)
+  ;; ABCL doesn't give documentation for (documentation function 'function) for all expressions.
+  ;; We try function-lambda-expression too
+  (multiple-value-bind (lambda-expression closure-p name) (function-lambda-expression function)
+    (declare (ignore closure-p))
+    (values (or (documentation function 'function) (third lambda-expression))
+            (symbol-name name))))
 
 (defun test-function (function &key (output t))
   "Test-function extracts and tests code snippets in <function>'s documentation
@@ -239,13 +269,12 @@
    description to <output>.
 
    See also the documentation string for test."
-
-  (when (documentation function 'function)
-    (let ((function-name (third (multiple-value-list (function-lambda-expression function)))))
-      (multiple-value-bind (tests-failed tests-passed)
-          (with-input-from-string (docstring (documentation function 'function))
-            (run-doctests docstring output))
-        (print-results function-name 'function output tests-failed tests-passed)))))
+  (multiple-value-bind (documentation function-name) (extract-function-documentation-and-name function)
+    (if documentation
+          (multiple-value-bind (tests-failed tests-passed)
+              (test-docstring documentation :output output)
+            (print-results function-name 'function output tests-failed tests-passed))
+          (values 0 0))))
 
 (defun test-macro (macro &key (output t))
   "Test-macro extracts and tests code snippets in <macro>'s documentation string.
@@ -253,13 +282,12 @@
    <output>.
 
    See also the documentation string for test."
-
-  (when (documentation macro 'function)
-    (let ((macro-name (third (multiple-value-list (function-lambda-expression (macro-function macro))))))
-      (multiple-value-bind (tests-failed tests-passed)
-          (with-input-from-string (docstring (documentation macro 'function))
-            (run-doctests docstring output))
-        (print-results macro-name 'macro output tests-failed tests-passed)))))
+  (if (documentation macro 'function)
+      (let ((macro-name (third (multiple-value-list (function-lambda-expression (macro-function macro))))))
+        (multiple-value-bind (tests-failed tests-passed)
+            (test-docstring (documentation macro 'function) :output output)
+          (print-results macro-name 'macro output tests-failed tests-passed)))
+      (values 0 0)))
 
 
 (defun test-file (filename &key (output t))
@@ -268,17 +296,20 @@
    <output>.
 
    See also the documentation string for test."
-
   (multiple-value-bind (tests-failed tests-passed)
       (with-open-file (docstring filename :direction :input)
-        (run-doctests docstring output))
+        (test-docstrting docstring :output output))
     (print-results filename 'file output tests-failed tests-passed)))
 
-(defun test-package (package)
-  (let ((*package* (find-package package)))
-    (do-symbols (symbol (find-package package))
-      (when (fboundp symbol)
-        (test-function (symbol-function symbol))))))
+(defun test-package (package &key (output t))
+  (let ((total-failed 0)
+        (total-passed 0))
+    (let ((*package* (find-package package)))
+      (do-symbols (symbol (find-package package))
+        (when (eq *package* (symbol-package symbol))
+          (multiple-value-bind (tests-failed tests-passed) (test symbol :output output)
+            (incf total-failed tests-failed)
+            (incf total-passed tests-passed)))))))
 
 (defun print-results (test-name test-type output tests-failed tests-passed)
   (when (> tests-failed 0)
