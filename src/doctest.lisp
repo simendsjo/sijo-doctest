@@ -28,14 +28,12 @@
 
 (defun whitespace-p (c)
   "Returns T if <c> is a whitespace character, otherwise NIL."
-
   (or (equal #\Space c)
       (equal #\Tab c)
       (equal #\Newline c)))
 
 (defun remove-ws (string)
   "Return <string> (as a string) with *all* whitespace characters removed."
-
   (if (stringp string)
       (remove-if #'whitespace-p (copy-seq string))
       (remove-if #'whitespace-p (copy-seq (string string)))))
@@ -89,7 +87,6 @@
 (defun run-doctests (docstring output)
   "Run-doctests is used by the test functions to perform the actual work.
    It returns the number of tests failed and passed and prints to <output>."
-
   (let ((tests-failed 0)
         (tests-passed 0)
         (count 0))
@@ -225,7 +222,6 @@
    -> |[4] (SQR 2) printed \"2 * 2 = 4\", expected \"Blah blah blah\".
        Results for SQR (FUNCTION): 1 of 4 failed.|
    (values 1 3)"
-
   (cond ((null thing)
          (values 0 0))
         ((stringp thing)
@@ -260,7 +256,6 @@
    description to <output>.
 
    See also the documentation string for test."
-
   (multiple-value-bind (documentation function-name) (extract-function-documentation-and-name function)
     (if documentation
           (multiple-value-bind (tests-failed tests-passed)
@@ -274,7 +269,6 @@
    <output>.
 
    See also the documentation string for test."
-
   (if (documentation macro 'function)
       (let ((macro-name (third (multiple-value-list (function-lambda-expression (macro-function macro))))))
         (multiple-value-bind (tests-failed tests-passed)
@@ -289,7 +283,6 @@
    <output>.
 
    See also the documentation string for test."
-
   (multiple-value-bind (tests-failed tests-passed)
       (with-open-file (docstring filename :direction :input)
         (test-docstrting docstring :output output))
