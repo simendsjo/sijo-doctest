@@ -59,8 +59,8 @@
          (expected-output-matches-actual-output
            (if expected-output
                (string-equal-ignore-ws actual-output expected-output)
-               T))
-         (result T))
+               t))
+         (result t))
     (if test-form-signaled-condition
         (unless (subtypep (type-of (car actual-result))
                           (car expected-result))
