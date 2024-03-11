@@ -243,6 +243,14 @@
   (with-input-from-string (docstring documentation)
     (run-doctests docstring output)))
 
+(defun extract-function-documentation-and-name (function)
+  ;; ABCL doesn't give documentation for (documentation function 'function) for all expressions.
+  ;; We try function-lambda-expression too
+  (multiple-value-bind (lambda-expression closure-p name) (function-lambda-expression function)
+    (declare (ignore closure-p))
+    (values (or (documentation function 'function) (third lambda-expression))
+            (symbol-name name))))
+
 (defun test-function (function &key (output t))
   "Test-function extracts and tests code snippets in <function>'s documentation
    string. It returns the number of tests failed and passed and prints a
@@ -250,12 +258,12 @@
 
    See also the documentation string for test."
 
-  (if (documentation function 'function)
-      (let ((function-name (third (multiple-value-list (function-lambda-expression function)))))
-        (multiple-value-bind (tests-failed tests-passed)
-            (test-docstring (documentation function 'function) :output output)
-          (print-results function-name 'function output tests-failed tests-passed)))
-      (values 0 0)))
+  (multiple-value-bind (documentation function-name) (extract-function-documentation-and-name function)
+    (if documentation
+          (multiple-value-bind (tests-failed tests-passed)
+              (test-docstring documentation :output output)
+            (print-results function-name 'function output tests-failed tests-passed))
+          (values 0 0))))
 
 (defun test-macro (macro &key (output t))
   "Test-macro extracts and tests code snippets in <macro>'s documentation string.
