@@ -1,0 +1,43 @@
+* Changelog
+All notable changes to this project will be documented in this file.
+
+The format is based on [[https://keepachangelog.com/en/1.1.0][Keep a Changelog]], and this project *DOES NOT* adhere to [[https://semver.org/spec/v2.0.0.html][Semantic
+Versioning]].
+
+** Unreleased
+*** Added
+- Support Embedded Common Lisp (ECL)
+- Support Clozure Common Lisp (CCL)
+- Support Armed Bear Common Lisp (ABCL)
+- ~test-docstring~ for testing strings -- simplifies testing
+- ~test-variable~ for testing variables
+*** Changed
+- Don't require an exact error, but rather a subclass of the expected error,
+  e.g. expecting ~type-error~ will allow a subclass like ~simple-type-error~.
+- The general ~test~ is exported
+- ~test~ runs ~test-package~ for ~package~
+- ~test~ supports ~null~
+- ~test~ supports ~string~
+- ~test~ for symbol will test both variable and function/macro bound to that symbol
+- Number of failed/passed tests is always returned, also when there are no
+  doctests for a thing, rather than ~nil~
+*** Deprecated
+*** Removed
+*** Fixed
+- ~test-package~ only includes symbols for the package under test
+- ~test-package~ works for macros
+*** Security
+
+** [[https://github.com/simendsjo/sijo-doctest/commit/039516e828b5737569350a13ffc90c2d8346ad8c][0.2.0]] - 2024-03-01
+*** Added
+- ~test-package~ function to test all functions in a package
+*** Changed
+- Tweaked to evaluate expected results to avoid problems with ~fset~ and
+  readtables; ~#{||}~ cannot be used, and ~(fset:empty-map)~ neither
+- Improved working with multiple values
+- Print only when tests are failing (useful when testing entire packages)
+*** Deprecated
+*** Removed
+*** Fixed
+- ~run-doctests~ doesn't throw on empty docstring (triggered eof error)
+*** Security
