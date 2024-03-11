@@ -28,9 +28,9 @@
 
 (defun whitespace-p (c)
   "Returns T if <c> is a whitespace character, otherwise NIL."
-  (or (equal #\Space c)
-      (equal #\Tab c)
-      (equal #\Newline c)))
+  (or (eql #\Space c)
+      (eql #\Tab c)
+      (eql #\Newline c)))
 
 (defun remove-ws (string)
   "Return <string> (as a string) with *all* whitespace characters removed."
