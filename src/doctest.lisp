@@ -42,7 +42,7 @@
   (string-equal (remove-ws string1) (remove-ws string2)))
 
 (defun run-doctest (test-form expected-result expected-output output count)
-  (let* ((test-form-signaled-condition 'NIL)
+  (let* ((test-form-signaled-condition nil)
          (actual-output (make-array '(0) :element-type 'base-char
                                          :fill-pointer 0
                                          :adjustable t))
@@ -65,14 +65,14 @@
         (unless (subtypep (type-of (car actual-result))
                           (car expected-result))
           (unless (subtypep (type-of (car actual-result)) 'warning)
-            (setf result 'NIL)
+            (setf result nil)
             (format output "~&[~A] ~A signaled a ~A: ~A, expected ~A.~%"
                     count test-form
                     (type-of (car actual-result)) (car actual-result)
                     (car expected-result))))
         (unless (and (equalp actual-result expected-result)
                      expected-output-matches-actual-output)
-          (setf result 'NIL)
+          (setf result nil)
           (if expected-output-matches-actual-output
               (format output "~&[~A] ~A returned~{ ~A~}, expected~{ ~A~}.~%"
                       count test-form
@@ -99,7 +99,7 @@
                    (whitespace-p (peek-char nil docstring)))
           (let ((test-form (read docstring))
                 (expected-result (list (read docstring)))
-                (expected-output 'NIL))
+                (expected-output nil))
             (when (and (symbolp (car expected-result))
                        (equal (string (car expected-result)) "->"))
               (setf expected-output (read docstring))
