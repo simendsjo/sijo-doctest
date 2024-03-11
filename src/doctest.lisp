@@ -309,7 +309,8 @@
         (when (eq *package* (symbol-package symbol))
           (multiple-value-bind (tests-failed tests-passed) (test symbol :output output)
             (incf total-failed tests-failed)
-            (incf total-passed tests-passed)))))))
+            (incf total-passed tests-passed)))))
+    (values total-failed total-passed)))
 
 (defun print-results (test-name test-type output tests-failed tests-passed)
   (when (> tests-failed 0)
