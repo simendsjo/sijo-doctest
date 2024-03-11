@@ -104,7 +104,6 @@
                        (equal (string (car expected-result)) "->"))
               (setf expected-output (read docstring))
               (setf expected-result (list (read docstring))))
-
             (if (run-doctest test-form
                              (car expected-result)
                              expected-output
@@ -112,7 +111,6 @@
                              (incf count))
                 (incf tests-passed)
                 (incf tests-failed))))))
-
     (values tests-failed tests-passed)))
 
 (defun test (thing &key (output t))
