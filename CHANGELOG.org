@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [[https://keepachangelog.com/en/1.1.0][Keep a Changelog]], and this project *DOES NOT* adhere to [[https://semver.org/spec/v2.0.0.html][Semantic
 Versioning]].
 
-** Unreleased
+** [[https://github.com/simendsjo/sijo-doctest/compare/v0.2..v0.3][0.3.0]] - 2024-03-11
 *** Added
 - Support Embedded Common Lisp (ECL)
 - Support Clozure Common Lisp (CCL)
