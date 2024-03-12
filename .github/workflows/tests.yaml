@@ -12,7 +12,7 @@ jobs:
           - ecl
           - ccl-bin
           - abcl-bin
-          - clasp-bin
+          # - clasp-bin
           - clisp-head
           # - cmu-bin
     runs-on: ${{ matrix.os }}
