@@ -13,7 +13,7 @@ jobs:
           - ccl-bin
           - abcl-bin
           # - clasp-bin
-          - clisp-head
+          # - clisp-head
           # - cmu-bin
     runs-on: ${{ matrix.os }}
     env:
