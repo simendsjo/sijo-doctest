@@ -9,8 +9,8 @@ jobs:
           # - windows-latest
         lisp:
           - sbcl-bin
-          # - ecl
-          # - ccl-bin
+          - ecl
+          - ccl-bin
           # - abcl-bin
           # - clasp-bin
           # - cmu-bin
