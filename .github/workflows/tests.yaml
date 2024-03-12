@@ -4,17 +4,17 @@ jobs:
     strategy:
       matrix:
         os:
-          - ubuntu-latest
-          # - macos-latest
+          # - ubuntu-latest
+          - macos-latest
           # - windows-latest
         lisp:
-          # - sbcl-bin
-          # - ecl
-          # - ccl-bin
+          - sbcl-bin
+          - ecl
+          - ccl-bin
           - abcl-bin
           - clasp-bin
-          - cmu-bin
           - clisp-head
+          # - cmu-bin
     runs-on: ${{ matrix.os }}
     env:
       LISP: ${{ matrix.lisp }}
