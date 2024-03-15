@@ -255,13 +255,28 @@
   (with-input-from-string (docstring (or documentation ""))
     (run-doctests docstring output)))
 
+(defun parse-lambda-body (body)
+  (values (and (stringp (car body)) (cdr body) (pop body))
+          (and (consp (car body)) (eq 'declare (caar body)) (pop body))
+          body))
+
+(defun parse-function-lambda-expression (function)
+  (multiple-value-bind (lambda-expression closure-p name) (function-lambda-expression function)
+    (declare (ignore closure-p))
+    (let ((parameters (cadr lambda-expression))
+          (lambda-body (cddr lambda-expression)))
+      (multiple-value-bind (docstring declare body) (parse-lambda-body lambda-body)
+        (values name parameters docstring declare body)))))
+
 (defun extract-function-documentation-and-name (function)
   ;; ABCL doesn't give documentation for (documentation function 'function) for all expressions.
   ;; We try function-lambda-expression too
-  (multiple-value-bind (lambda-expression closure-p name) (function-lambda-expression function)
-    (declare (ignore closure-p))
-    (values (or (documentation function 'function) (third lambda-expression))
-            (symbol-name name))))
+  (multiple-value-bind (name parameters docstring declare body) (parse-function-lambda-expression function)
+    (declare (ignore parameters declare body))
+    (values (or (documentation function 'function)
+                docstring
+                "")
+            name)))
 
 (defun test-function (function &key (output t))
   "Test-function extracts and tests code snippets in <function>'s documentation
