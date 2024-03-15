@@ -42,7 +42,7 @@
 (defun string-equal-ignore-ws (string1 string2)
   (string-equal (remove-ws string1) (remove-ws string2)))
 
-(defun run-doctest (test-form expected-result expected-output output count)
+(defun run-doctest (test-form expected-result expected-output output count &key (test #'equalp))
   (let* ((test-form-signaled-condition nil)
          (actual-output (make-array '(0) :element-type 'base-char
                                          :fill-pointer 0
@@ -71,7 +71,7 @@
                     count test-form
                     (type-of (car actual-result)) (car actual-result)
                     (car expected-result))))
-        (unless (and (equalp actual-result expected-result)
+        (unless (and (funcall test actual-result expected-result)
                      expected-output-matches-actual-output)
           (setf result nil)
           (if expected-output-matches-actual-output
@@ -85,7 +85,7 @@
                       expected-output))))
     result))
 
-(defun run-doctests (docstring output)
+(defun run-doctests (docstring output &key (test #'equalp))
   "Run-doctests is used by the test functions to perform the actual work.
    It returns the number of tests failed and passed and prints to <output>."
   (let ((tests-failed 0)
@@ -109,12 +109,13 @@
                              (car expected-result)
                              expected-output
                              output
-                             (incf count))
+                             (incf count)
+                             :test test)
                 (incf tests-passed)
                 (incf tests-failed))))))
     (values tests-failed tests-passed)))
 
-(defun test (thing &key (output t))
+(defun test (thing &key (output t) (test #'equalp))
   "Test extracts and tests code snippets embedded in the documentation string
    of <thing>. It returns the number of tests failed and passed and prints a
    description to <output>.
@@ -224,13 +225,13 @@
   (cond ((null thing)
          (values 0 0))
         ((stringp thing)
-         (test-docstring thing :output output))
+         (test-docstring thing :output output :test test))
         ((functionp thing)
-         (test-function thing :output output))
+         (test-function thing :output output :test test))
         ((pathnamep thing)
-         (test-file thing :output output))
+         (test-file thing :output output :test test))
         ((packagep thing)
-         (test-package thing :output output))
+         (test-package thing :output output :test test))
         ((symbolp thing)
          (let ((total-failed 0)
                (total-passed 0))
@@ -238,32 +239,47 @@
                     (multiple-value-bind (failed passed) (funcall fn)
                       (incf total-failed failed)
                       (incf total-passed passed))))
-             (collect (lambda () (test-variable thing :output output)))
+             (collect (lambda () (test-variable thing :output output :test test)))
              (cond
                ((macro-function thing)
-                (collect (lambda () (test-macro thing :output output))))
+                (collect (lambda () (test-macro thing :output output :test test))))
                ((fboundp thing)
-                (collect (lambda () (test-function (symbol-function thing) :output output)))))
+                (collect (lambda () (test-function (symbol-function thing) :output output :test test)))))
              (values total-failed total-passed))))
         (t
          (error "~&No suitable testing-function available for ~A~%" thing))))
 
-(defun test-variable (thing &key (output t))
-  (test-docstring (documentation thing 'variable) :output output))
+(defun test-variable (thing &key (output t) (test #'equalp))
+  (test-docstring (documentation thing 'variable) :output output :test test))
 
-(defun test-docstring (documentation &key (output t))
+(defun test-docstring (documentation &key (output t) (test #'equalp))
   (with-input-from-string (docstring (or documentation ""))
-    (run-doctests docstring output)))
+    (run-doctests docstring output :test test)))
+
+(defun parse-lambda-body (body)
+  (values (and (stringp (car body)) (cdr body) (pop body))
+          (and (consp (car body)) (eq 'declare (caar body)) (pop body))
+          body))
+
+(defun parse-function-lambda-expression (function)
+  (multiple-value-bind (lambda-expression closure-p name) (function-lambda-expression function)
+    (declare (ignore closure-p))
+    (let ((parameters (cadr lambda-expression))
+          (lambda-body (cddr lambda-expression)))
+      (multiple-value-bind (docstring declare body) (parse-lambda-body lambda-body)
+        (values name parameters docstring declare body)))))
 
 (defun extract-function-documentation-and-name (function)
   ;; ABCL doesn't give documentation for (documentation function 'function) for all expressions.
   ;; We try function-lambda-expression too
-  (multiple-value-bind (lambda-expression closure-p name) (function-lambda-expression function)
-    (declare (ignore closure-p))
-    (values (or (documentation function 'function) (third lambda-expression))
-            (symbol-name name))))
+  (multiple-value-bind (name parameters docstring declare body) (parse-function-lambda-expression function)
+    (declare (ignore parameters declare body))
+    (values (or (documentation function 'function)
+                docstring
+                "")
+            name)))
 
-(defun test-function (function &key (output t))
+(defun test-function (function &key (output t) (test #'equalp))
   "Test-function extracts and tests code snippets in <function>'s documentation
    string. It returns the number of tests failed and passed and prints a
    description to <output>.
@@ -272,11 +288,11 @@
   (multiple-value-bind (documentation function-name) (extract-function-documentation-and-name function)
     (if documentation
           (multiple-value-bind (tests-failed tests-passed)
-              (test-docstring documentation :output output)
+              (test-docstring documentation :output output :test test)
             (print-results function-name 'function output tests-failed tests-passed))
           (values 0 0))))
 
-(defun test-macro (macro &key (output t))
+(defun test-macro (macro &key (output t) (test #'equalp))
   "Test-macro extracts and tests code snippets in <macro>'s documentation string.
    It returns the number of tests failed and passed and prints a description to
    <output>.
@@ -285,12 +301,12 @@
   (if (documentation macro 'function)
       (let ((macro-name (third (multiple-value-list (function-lambda-expression (macro-function macro))))))
         (multiple-value-bind (tests-failed tests-passed)
-            (test-docstring (documentation macro 'function) :output output)
+            (test-docstring (documentation macro 'function) :output output :test test)
           (print-results macro-name 'macro output tests-failed tests-passed)))
       (values 0 0)))
 
 
-(defun test-file (filename &key (output t))
+(defun test-file (filename &key (output t) (test #'equalp))
   "Test-file extracts and tests code snippets in the contents of <filename>. It
    returns the number of tests failed and passed and prints a description to
    <output>.
@@ -298,16 +314,16 @@
    See also the documentation string for test."
   (multiple-value-bind (tests-failed tests-passed)
       (with-open-file (docstring filename :direction :input)
-        (test-docstrting docstring :output output))
+        (test-docstrting docstring :output output :test test))
     (print-results filename 'file output tests-failed tests-passed)))
 
-(defun test-package (package &key (output t))
+(defun test-package (package &key (output t) (test #'equalp))
   (let ((total-failed 0)
         (total-passed 0))
     (let ((*package* (find-package package)))
       (do-symbols (symbol (find-package package))
         (when (eq *package* (symbol-package symbol))
-          (multiple-value-bind (tests-failed tests-passed) (test symbol :output output)
+          (multiple-value-bind (tests-failed tests-passed) (test symbol :output output :test test)
             (incf total-failed tests-failed)
             (incf total-passed tests-passed)))))
     (values total-failed total-passed)))

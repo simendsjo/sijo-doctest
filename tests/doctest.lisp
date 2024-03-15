@@ -16,6 +16,39 @@
       (assert-equalp expected-output actual-output))
     (values (first result) (second result))))
 
+(defun test-parse-function-lambda-expression (function &key
+                                                         (expected-parameters nil)
+                                                         (expected-docstring nil)
+                                                         (expected-declare nil)
+                                                         (expected-body nil))
+  (multiple-value-bind (name parameters docstring declare body) (doctest::parse-function-lambda-expression function)
+    (assert-true name)
+    (assert-equalp expected-parameters parameters)
+    (assert-equalp expected-docstring docstring)
+    (assert-equalp expected-declare declare)
+    (assert-equalp expected-body body)))
+
+(define-test parse-function-lambda-expression ()
+  (test-parse-function-lambda-expression (lambda ()))
+  (test-parse-function-lambda-expression (lambda (a b))
+                                         :expected-parameters '(a b))
+  (test-parse-function-lambda-expression (lambda () "body")
+                                         :expected-body '("body"))
+  (test-parse-function-lambda-expression (lambda () (declare) "body")
+                                         :expected-declare '(declare)
+                                         :expected-body '("body"))
+  (test-parse-function-lambda-expression (lambda () "docstring" "body")
+                                         :expected-docstring "docstring"
+                                         :expected-body '("body"))
+  (test-parse-function-lambda-expression (lambda () "docstring" (declare) "body")
+                                         :expected-docstring "docstring"
+                                         :expected-declare '(declare)
+                                         :expected-body '("body"))
+  (test-parse-function-lambda-expression (lambda () (declare))
+                                         :expected-declare '(declare))
+  (test-parse-function-lambda-expression (lambda () "docstring" (declare))
+                                         :expected-docstring "docstring"
+                                         :expected-declare '(declare)))
 
 (define-test doctest ()
   ;; Test the documentation for the library itself

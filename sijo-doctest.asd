@@ -1,7 +1,7 @@
 (defsystem :sijo-doctest
   :in-order-to ((test-op (test-op :sijo-doctest/tests)))
   :description "Doctests for Common Lisp"
-  :version "0.3.1"
+  :version "0.4.0"
   :author "Johan Lindberg (Pulp Software) <johan@pulp.se>, Simen Endsjø <simendsjo@gmail.com>"
   :licence "GPL"
   :serial t
