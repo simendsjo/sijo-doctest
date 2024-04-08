@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [[https://keepachangelog.com/en/1.1.0][Keep a Changelog]], and this project *DOES NOT* adhere to [[https://semver.org/spec/v2.0.0.html][Semantic
 Versioning]].
 
+** [[https://github.com/simendsjo/sijo-doctest/compare/29a0eaa1c30144fac48543be0285c168118fc745..v0.4.1][0.4.1]] - 2024-04-08
+*** Added
+*** Changed
+*** Deprecated
+*** Removed
+*** Fixed
+- ~test-file~ didn't work. It had a typo in the ~test-docstring~ function name
+  and passed the file instead of the file content.
+*** Security
+
 ** [[https://github.com/simendsjo/sijo-doctest/compare/9e591638cc8619a141ed44b65bb23d318f2bfc67..v0.4.0][0.4.0]] - 2024-03-15
 *** Added
 - [[https://github.com/simendsjo/sijo-doctest/issues/7][issue#7]] All test functions accepts a ~:test~ keyword to supply another testing
