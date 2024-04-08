@@ -313,8 +313,7 @@
 
    See also the documentation string for test."
   (multiple-value-bind (tests-failed tests-passed)
-      (with-open-file (docstring filename :direction :input)
-        (test-docstrting docstring :output output :test test))
+      (test-docstring (uiop:read-file-string filename) :output output :test test)
     (print-results filename 'file output tests-failed tests-passed)))
 
 (defun test-package (package &key (output t) (test #'equalp))

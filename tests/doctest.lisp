@@ -101,3 +101,16 @@
     (defmacro test-macro () :macro)
     (setf (documentation 'test-macro 'function) ">> (sijo-doctest/tests::test-macro) :macro")
     (assert-doctest (values 0 1) 'test-macro)))
+
+(define-test doctest-file ()
+  (multiple-value-bind (file-failed file-passed)
+      (uiop:with-temporary-file (:pathname test-file)
+        (unwind-protect (progn
+                          (uiop:delete-file-if-exists test-file)
+                          (with-open-file (stream test-file :direction :output :external-format :utf-8)
+                            (write-string (documentation #'doctest:test 'function) stream))
+                          (doctest:test test-file))
+          (uiop:delete-file-if-exists test-file)))
+   (multiple-value-bind (doctest-failed doctest-passed) (doctest:test #'doctest:test)
+     (assert-eql doctest-failed file-failed)
+     (assert-eql doctest-passed file-passed))))
