@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [[https://keepachangelog.com/en/1.1.0][Keep a Changelog]], and this project *DOES NOT* adhere to [[https://semver.org/spec/v2.0.0.html][Semantic
 Versioning]].
 
+** [[https://github.com/simendsjo/sijo-doctest/compare/v0.4.0..v0.4.1][0.4.1]] - 2025-08-13
+*** Added
+*** Changed
+*** Deprecated
+*** Removed
+*** Fixed
+- [[https://github.com/simendsjo/sijo-doctest/issues/9][issue#9]] ~test-file~ doesn't work. It tried to call non-existing function
+  ~test-docstrting~, a typo for ~test-docstring~ which doesn't work with an
+  ~fd-stream~ anyway. Corrected to call ~run-doctests~.
+*** Security
+
 ** [[https://github.com/simendsjo/sijo-doctest/compare/9e591638cc8619a141ed44b65bb23d318f2bfc67..v0.4.0][0.4.0]] - 2024-03-15
 *** Added
 - [[https://github.com/simendsjo/sijo-doctest/issues/7][issue#7]] All test functions accepts a ~:test~ keyword to supply another testing
