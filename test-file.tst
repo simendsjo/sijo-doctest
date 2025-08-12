@@ -12,30 +12,33 @@
    >> 1 ; NOTE! You can use comments to clarify!
    1
 
-   If you expect more than one value you should wrap it in a multiple-value-
-   list to create one form.
+   If you expect more than one value you should use the values function in the
+   expected results.
 
-   >> (multiple-value-list (values 1 2))
-   (1 2)
+   >> (values 1 2)
+   (values 1 2)
 
    Newlines and other whitespace (including comments) doesn't particularly
-   matter. We could just as well have written >> (multiple-value-list (values 1
-   2)) (1 2) instead.
+   matter. We could just as well have written >> (values 1
+   2) (values 1 2) instead.
 
    If you test a thing that doesn't have a documentation string, test will
-   return NIL.
+   return (values 0 0).
+   ECL NOTE: I pass an empty string here as redefining a function in ECL won't
+   remove the old docstring unless a docstring is explicitly passed.
 
    >> (defun sqr (x)
+        ""
         (* x x))
-   SQR
-   >> (doctest:test #'sqr)
-   NIL
+   'SQR
+   >> (sijo-doctest::test #'sqr)
+   (values 0 0)
 
    If you need to test that a function signals a condition for certain inputs
    you can use the name of the condition as the expected return value.
 
    >> (sqr 'x)
-   TYPE-ERROR
+   'TYPE-ERROR
 
    If we add a documentation string for sqr with a doctest, we can verify that
    tests can fail as well.
@@ -43,15 +46,15 @@
    >> (defun sqr (x)
         "Returns <x> squared.
 
-         This test will fail:
-         >> (sqr 3) 3"
+          This test will fail:
+          >> (sqr 3) 3"
         (* x x))
-   SQR
+   'SQR
 
    Testing sqr with test should now return 1 failed and 0 passed.
 
-   >> (multiple-value-list (doctest:test #'sqr))
-   (1 0)
+   >> (sijo-doctest::test #'sqr)
+   (values 1 0)
 
    If you need to test the output of a function you can add an expected output
    form (written as -> <expected-output>) *between* the function call and the
@@ -61,33 +64,33 @@
    >> (defun sqr (x)
         "Prints <x> * <x> = <x*x> to standard output and returns NIL.
 
-         This test will pass,
+          This test will pass,
 
-         >> (sqr 2)
-         -> |2 * 2 = 4|
-         NIL
+          >> (sqr 2)
+          -> |2 * 2 = 4|
+          NIL
 
-         as will this, because it ignores the output.
+          as will this, because it ignores the output.
 
-         >> (sqr 2)
-         NIL
+          >> (sqr 2)
+          NIL
 
-         Perhaps surprisingly, this will pass as well,
+          Perhaps surprisingly, this will pass as well,
 
-         >> (sqr 2) -> |2*2=4| NIL
+          >> (sqr 2) -> |2*2=4| NIL
 
-         the reason it passes even though it doesn't exactly match the
-         actual output is because the comparison is done after all
-         whitespace characters are removed.
+          the reason it passes even though it doesn't exactly match the
+          actual output is because the comparison is done after all
+          whitespace characters are removed.
 
-         This test will fail because expected output doesn't match the
-         actual output.
+          This test will fail because expected output doesn't match the
+          actual output.
 
-         >> (sqr 2)
-         -> |Blah blah blah|
-         NIL"
+          >> (sqr 2)
+          -> |Blah blah blah|
+          NIL"
         (format t "~A * ~A = ~A" x x (* x x)))
-   SQR
+   'SQR
 
    Testing sqr with test should now return 1 failed and 2 passed. It should
    also inform us that:
@@ -97,7 +100,7 @@
 
    NOTE! Whitespace is ignored when output is compared.
 
-   >> (multiple-value-list (doctest:test #'sqr :output T))
+   >> (sijo-doctest::test #'sqr :output T)
    -> |[4] (SQR 2) printed "2 * 2 = 4", expected "Blah blah blah".
        Results for SQR (FUNCTION): 1 of 4 failed.|
-   (1 3)
+   (values 1 3)
