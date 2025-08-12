@@ -101,3 +101,7 @@
     (defmacro test-macro () :macro)
     (setf (documentation 'test-macro 'function) ">> (sijo-doctest/tests::test-macro) :macro")
     (assert-doctest (values 0 1) 'test-macro)))
+
+(define-test test-file ()
+  (let ((*package* (find-package "SIJO-DOCTEST")))
+    (doctest:test-file "test-file.tst")))
