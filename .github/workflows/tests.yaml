@@ -5,16 +5,30 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          # - macos-latest
-          # - windows-latest
+          - macos-latest
+          - windows-latest
         lisp:
           - sbcl-bin
-          # - ecl
-          # - ccl-bin
-          # - abcl-bin
+          - ecl
+          - ccl-bin
+          - abcl-bin
           # - clasp-bin
           # - cmu-bin
           # - clisp-head
+        # Not all combinations works, so we disable some
+        exclude:
+          # ccl-bin/system does not exist.stop.
+          - os: macos-latest
+            lisp: ccl-bin
+          # ecl/system does not exist.stop.
+          - os: windows-latest
+            lisp: ecl
+          # ccl-bin/system does not exist.stop.
+          - os: windows-latest
+            lisp: ccl-bin
+          # abcl-bin/system does not exist.stop.
+          - os: windows-latest
+            lisp: abcl-bin
     runs-on: ${{ matrix.os }}
     env:
       LISP: ${{ matrix.lisp }}
