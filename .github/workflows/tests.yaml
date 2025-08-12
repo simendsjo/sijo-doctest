@@ -29,6 +29,7 @@ jobs:
           # abcl-bin/system does not exist.stop.
           - os: windows-latest
             lisp: abcl-bin
+      fail-fast: false
     runs-on: ${{ matrix.os }}
     env:
       LISP: ${{ matrix.lisp }}
